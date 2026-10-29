@@ -1,0 +1,46 @@
+# Same bench as bench.yaml, but the virtual ECU runs "buggy firmware":
+# brake application no longer cancels cruise. Run the suite against it to see
+# the tests catch the bug:
+#
+#   benchpilot run examples/cruise_control --bench examples/cruise_control/faulty.bench.yaml
+#
+# Other faults to try: no_integral, low_min_engage, double_accel_step
+name: cruise-control-sim (faulty firmware)
+
+bench:
+  adapter: sim
+  options:
+    model: cruise_control
+    dt: 0.01
+    faults: [brake_cancel_ignored]
+
+debug:
+  adapter: sim        # virtual debugger: reads the virtual ECU's variables
+
+# Logical name used in tests -> adapter path on this bench
+signals:
+  vehicle.speed_kph:      plant/speed_kph
+  road.grade_pct:         plant/grade_pct
+  engine.throttle_pct:    plant/throttle_pct
+  driver.accel_pedal_pct: driver/accel_pedal_pct
+  driver.brake_pedal_pct: driver/brake_pedal_pct
+  cruise.enable:          driver/cruise_main_switch
+  cruise.set_button:      driver/cruise_set_button
+  cruise.cancel_button:   driver/cruise_cancel_button
+  cruise.accel_button:    driver/cruise_accel_button
+
+# Safety interlocks: writes outside these ranges are blocked before they reach the bench.
+limits:
+  vehicle.speed_kph:      {min: 0, max: 180}
+  road.grade_pct:         {min: -12, max: 12}
+  driver.accel_pedal_pct: {min: 0, max: 100}
+  driver.brake_pedal_pct: {min: 0, max: 100}
+  cruise.enable:          {min: 0, max: 1}
+  cruise.set_button:      {min: 0, max: 1}
+  cruise.cancel_button:   {min: 0, max: 1}
+  cruise.accel_button:    {min: 0, max: 1}
+
+# Safety interlocks for ECU variable writes made through the debug adapter.
+ecu_limits:
+  cc_state:         {min: 0, max: 2}      # OFF / STANDBY / ACTIVE
+  cc_set_speed_kph: {min: 0, max: 160}

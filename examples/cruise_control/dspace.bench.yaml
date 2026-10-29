@@ -1,0 +1,57 @@
+# TEMPLATE: the cruise-control signals mapped onto a dSPACE HIL bench through ASAM XIL,
+# with ECU internals read through a Lauterbach TRACE32 debugger.
+#
+# Nothing in here is real. Copy it next to your own tests and replace every
+# value marked TODO with the ones from your bench (see docs/dspace.md).
+# Check it before running any test:
+#
+#   benchpilot check-bench --bench path/to/your.bench.yaml
+#
+# Setup guides: docs/dspace.md (HIL) and docs/trace32.md (debugger).
+name: dspace-hil-template
+
+bench:
+  adapter: xil
+  options:
+    vendor: dSPACE GmbH
+    product: XIL API
+    product_version: "TODO"                 # the dSPACE Release on the PC, e.g. "2023-B"
+    maport_config: C:/TODO/MAPortConfig.xml # MAPort configuration for your platform
+    start_simulation: false                 # leave the real-time application as it is
+    sample_period: 0.05                     # seconds between polled samples
+
+# ECU internals (`ecu_var` steps) through the Lauterbach debugger on the ECU's debug port.
+debug:
+  adapter: trace32
+  options:
+    node: localhost                         # PC running TRACE32 PowerView
+    port: 20000                             # RCL port from config.t32 (TODO: check yours)
+    reset_commands: []                      # never reset the ECU between tests
+
+# Logical name used in tests -> MAPort variable path on this bench.
+signals:
+  vehicle.speed_kph:      "Model Root/TODO/Vehicle/Speed/Value"
+  road.grade_pct:         "Model Root/TODO/Environment/Grade/Value"
+  engine.throttle_pct:    "Model Root/TODO/Engine/Throttle/Value"
+  driver.accel_pedal_pct: "Model Root/TODO/Driver/AccelPedal/Value"
+  driver.brake_pedal_pct: "Model Root/TODO/Driver/BrakePedal/Value"
+  cruise.enable:          "Model Root/TODO/Cruise/MainSwitch/Value"
+  cruise.set_button:      "Model Root/TODO/Cruise/SetButton/Value"
+  cruise.cancel_button:   "Model Root/TODO/Cruise/CancelButton/Value"
+  cruise.accel_button:    "Model Root/TODO/Cruise/AccelButton/Value"
+
+# Safety interlocks. On real hardware, set these from the rig's actual safe ranges.
+limits:
+  vehicle.speed_kph:      {min: 0, max: 180}
+  road.grade_pct:         {min: -12, max: 12}
+  driver.accel_pedal_pct: {min: 0, max: 100}
+  driver.brake_pedal_pct: {min: 0, max: 100}
+  cruise.enable:          {min: 0, max: 1}
+  cruise.set_button:      {min: 0, max: 1}
+  cruise.cancel_button:   {min: 0, max: 1}
+  cruise.accel_button:    {min: 0, max: 1}
+
+# Safety interlocks for ECU variable writes made through the debugger.
+ecu_limits:
+  cc_state:         {min: 0, max: 2}        # TODO: your ECU's variables and safe ranges
+  cc_set_speed_kph: {min: 0, max: 160}

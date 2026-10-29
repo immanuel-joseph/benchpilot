@@ -1,0 +1,27 @@
+id: CC-005
+title: Speed never drops out of band while the grade ramps to 5%
+requirement: REQ-CC-04
+tags: [cruise, regression]
+setup:
+  - set: {signal: vehicle.speed_kph, value: 80}
+  - set: {signal: driver.accel_pedal_pct, value: 9.3}
+  - set: {signal: cruise.enable, value: 1}
+  - wait: 1s
+  - set: {signal: cruise.set_button, value: 1}
+  - wait: 0.2s
+  - set: {signal: cruise.set_button, value: 0}
+  - set: {signal: driver.accel_pedal_pct, value: 0}
+  - wait: 3s
+steps:
+  - ramp: {signal: road.grade_pct, from: 0, to: 5, over: 4s}
+  - expect:                      # during and after the ramp, never below 78.5
+      signal: vehicle.speed_kph
+      min: 78.5
+      hold_for: 15s
+  - expect:
+      signal: vehicle.speed_kph
+      equals: 80
+      tolerance: 0.5
+teardown:
+  - set: {signal: road.grade_pct, value: 0}
+  - set: {signal: cruise.enable, value: 0}

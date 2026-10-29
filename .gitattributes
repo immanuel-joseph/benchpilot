@@ -1,0 +1,9 @@
+# Normalise line endings in the repo; let Git pick the platform's on checkout.
+* text=auto
+
+# Shell scripts and git hooks must keep LF, or "#!/bin/sh" breaks on Windows checkouts.
+*.sh text eol=lf
+.githooks/* text eol=lf
+
+*.svg text eol=lf
+*.png binary

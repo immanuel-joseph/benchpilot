@@ -1,0 +1,34 @@
+id: CC-002
+title: Brake pedal disengages cruise and releases the throttle
+requirement: REQ-CC-05
+tags: [cruise, safety, regression]
+setup:
+  - set: {signal: vehicle.speed_kph, value: 100}
+  - set: {signal: driver.accel_pedal_pct, value: 12}    # holds ~100 kph on the flat
+  - set: {signal: cruise.enable, value: 1}
+  - wait: 1s
+  - set: {signal: cruise.set_button, value: 1}
+  - wait: 0.2s
+  - set: {signal: cruise.set_button, value: 0}
+  - set: {signal: driver.accel_pedal_pct, value: 0}
+  - wait: 2s
+  - expect: {ecu_var: cc_state, equals: 2}
+steps:
+  - set: {signal: driver.brake_pedal_pct, value: 20}
+  - expect:
+      ecu_var: cc_state
+      equals: 1                  # STANDBY
+      within: 100ms
+  - expect:
+      signal: engine.throttle_pct
+      max: 0.1
+      within: 100ms
+  - set: {signal: driver.brake_pedal_pct, value: 0}
+  - wait: 1s
+  - expect:                      # releasing the brake must not re-engage cruise
+      ecu_var: cc_state
+      equals: 1
+      hold_for: 2s
+teardown:
+  - set: {signal: driver.brake_pedal_pct, value: 0}
+  - set: {signal: cruise.enable, value: 0}

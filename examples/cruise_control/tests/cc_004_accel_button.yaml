@@ -1,0 +1,31 @@
+id: CC-004
+title: ACCEL raises the set speed by 5 kph without overshoot
+requirement: REQ-CC-06
+tags: [cruise, regression]
+setup:
+  - set: {signal: vehicle.speed_kph, value: 80}
+  - set: {signal: driver.accel_pedal_pct, value: 9.3}
+  - set: {signal: cruise.enable, value: 1}
+  - wait: 1s
+  - set: {signal: cruise.set_button, value: 1}
+  - wait: 0.2s
+  - set: {signal: cruise.set_button, value: 0}
+  - set: {signal: driver.accel_pedal_pct, value: 0}
+  - wait: 3s
+steps:
+  - set: {signal: cruise.accel_button, value: 1}
+  - wait: 0.2s
+  - set: {signal: cruise.accel_button, value: 0}
+  - expect:
+      ecu_var: cc_set_speed_kph
+      equals: 85
+      tolerance: 0.5
+  - expect_response:             # REQ-CC-06, as written: settle and overshoot limits
+      signal: vehicle.speed_kph
+      from: 80                     # speed before the press
+      to: 85
+      tolerance: 1                 # "reach the new set speed ±1 kph"
+      settles_within: 15s
+      overshoot_max: 1.5           # kph past 85 (use "2%" for a share of the step)
+teardown:
+  - set: {signal: cruise.enable, value: 0}

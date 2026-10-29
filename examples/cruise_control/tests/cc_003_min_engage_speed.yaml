@@ -1,0 +1,24 @@
+id: CC-003
+title: SET is ignored below the minimum engage speed
+requirement: REQ-CC-03
+tags: [cruise, regression]
+setup:
+  - expect: {ecu_var: cc_state, equals: 0}   # OFF with the main switch off (REQ-CC-01)
+  - set: {signal: vehicle.speed_kph, value: 30}
+  - set: {signal: driver.accel_pedal_pct, value: 5}
+  - set: {signal: cruise.enable, value: 1}
+  - wait: 0.5s
+  - expect: {ecu_var: cc_state, equals: 1}   # STANDBY once switched on (REQ-CC-01)
+steps:
+  - set: {signal: cruise.set_button, value: 1}
+  - wait: 0.2s
+  - set: {signal: cruise.set_button, value: 0}
+  - expect:
+      ecu_var: cc_state
+      equals: 1                  # still STANDBY, never ACTIVE
+      hold_for: 2s
+  - expect:
+      ecu_var: cc_set_speed_kph
+      equals: 0
+teardown:
+  - set: {signal: cruise.enable, value: 0}

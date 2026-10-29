@@ -1,0 +1,27 @@
+id: CC-001
+title: Cruise holds set speed on a 3% grade
+requirement: REQ-CC-04
+tags: [cruise, regression]
+setup:
+  - set: {signal: vehicle.speed_kph, value: 80}
+  - set: {signal: driver.accel_pedal_pct, value: 9.3}   # driver holds 80 kph on the flat
+  - set: {signal: cruise.enable, value: 1}
+  - wait: 2s
+steps:
+  - set:  {signal: cruise.set_button, value: 1}
+  - wait: 0.5s
+  - set:  {signal: cruise.set_button, value: 0}
+  - set:  {signal: driver.accel_pedal_pct, value: 0}   # foot off, cruise takes over
+  - expect:
+      ecu_var: cc_state
+      equals: 2                  # ACTIVE
+  - set:  {signal: road.grade_pct, value: 3}
+  - expect:
+      signal: vehicle.speed_kph
+      equals: 80
+      tolerance: 1.5
+      within: 10s
+      hold_for: 5s
+teardown:
+  - set: {signal: cruise.enable, value: 0}
+  - set: {signal: road.grade_pct, value: 0}

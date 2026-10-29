@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "benchpilot"
+version = "0.1.0"
+description = "Vendor-agnostic hardware-in-the-loop test framework: tests as YAML, pluggable bench adapters, a built-in virtual ECU."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.5",
+    "PyYAML>=6.0",
+]
+keywords = ["hil", "hardware-in-the-loop", "testing", "embedded", "automotive", "ecu"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Embedded Systems",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+xil = ["pythonnet>=3.0; sys_platform == 'win32'"]
+trace32 = ["lauterbach-trace32-rcl"]
+
+[project.scripts]
+benchpilot = "benchpilot.cli:main"
+
+[project.entry-points."benchpilot.bench_adapters"]
+sim = "benchpilot.adapters.sim:create_bench"
+xil = "benchpilot.adapters.xil:create_bench"
+
+[project.entry-points."benchpilot.debug_adapters"]
+sim = "benchpilot.adapters.sim:create_debugger"
+trace32 = "benchpilot.adapters.trace32:create_debugger"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/benchpilot"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["benchpilot"]
+known-local-folder = ["conftest"]

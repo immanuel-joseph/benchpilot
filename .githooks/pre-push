@@ -1,0 +1,5 @@
+#!/bin/sh
+# Runs local CI before every push; the push is cancelled if it fails.
+# Enable once per clone:  git config core.hooksPath .githooks
+# Skip in an emergency:   git push --no-verify
+exec "$(git rev-parse --show-toplevel)/scripts/ci.sh"
